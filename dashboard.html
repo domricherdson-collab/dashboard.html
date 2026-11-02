@@ -326,7 +326,7 @@
         <div id="live-mats" class="tab-content active">
             <div class="mats-grid">
 
-                <!-- MAT 1 -->
+                <!-- MAT 1 (Synced live with index.html) -->
                 <div class="mat-card">
                     <div class="mat-header">
                         <div class="mat-title">🔴 Mat 1 (Main Court)</div>
@@ -334,18 +334,18 @@
                     </div>
                     <div class="mat-body">
                         <div class="timer-bar">
-                            <span class="timer-quarter" id="m1-qtr">Quarter 3</span>
-                            <span class="timer-time" id="m1-timer">01:42</span>
+                            <span class="timer-quarter" id="m1-qtr">Quarter 1</span>
+                            <span class="timer-time" id="m1-timer">02:00</span>
                         </div>
                         <div class="scores-row">
                             <div class="player-block serving">
-                                <div class="p-name">J. Miller</div>
-                                <div class="p-score" id="m1-p1-score">14</div>
+                                <div class="p-name" id="m1-p1-name">Player A</div>
+                                <div class="p-score" id="m1-p1-score">0</div>
                             </div>
                             <div class="vs-divider">VS</div>
                             <div class="player-block">
-                                <div class="p-name">A. Vance</div>
-                                <div class="p-score" id="m1-p2-score">11</div>
+                                <div class="p-name" id="m1-p2-name">Player B</div>
+                                <div class="p-score" id="m1-p2-score">0</div>
                             </div>
                         </div>
                         <div class="quick-actions">
@@ -361,7 +361,7 @@
                 <div class="mat-card">
                     <div class="mat-header">
                         <div class="mat-title">🔵 Mat 2</div>
-                        <span class="status-badge status-pause" id="m2-status">PAUSED (RE-RACK)</span>
+                        <span class="status-badge status-pause" id="m2-status">PAUSED</span>
                     </div>
                     <div class="mat-body">
                         <div class="timer-bar">
@@ -458,7 +458,6 @@
             <div class="card">
                 <h2>Championship Tournament Bracket</h2>
                 <div class="bracket-container">
-                    
                     <div class="bracket-round">
                         <div class="round-title">Semi-Finals</div>
                         <div class="match-box">
@@ -470,7 +469,6 @@
                             <div class="team"><span>L. Taylor</span> <span>15</span></div>
                         </div>
                     </div>
-
                     <div class="bracket-round">
                         <div class="round-title">Finals</div>
                         <div class="match-box" style="margin-top: 2rem;">
@@ -478,7 +476,6 @@
                             <div class="team"><span>M. Garcia</span> <span>-</span></div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -489,10 +486,10 @@
                 <h2>Upcoming Mat Assignments</h2>
                 <ul style="list-style: none;">
                     <li style="padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
-                        <strong>Mat 1 - 2:30 PM:</strong> Championship Finals (J. Miller vs M. Garcia)
+                        <strong>Mat 1 - 2:30 PM:</strong> Championship Finals
                     </li>
                     <li style="padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
-                        <strong>Mat 2 - 2:30 PM:</strong> 3rd Place Playoff (R. Chen vs L. Taylor)
+                        <strong>Mat 2 - 2:30 PM:</strong> 3rd Place Playoff
                     </li>
                 </ul>
             </div>
@@ -501,9 +498,8 @@
     </div>
 
     <script>
-        // State management for scores
         const matScores = {
-            1: { p1: 14, p2: 11 },
+            1: { p1: 0, p2: 0 },
             2: { p1: 8, p2: 9 },
             3: { p1: 18, p2: 18 },
             4: { p1: 21, p2: 15 }
@@ -536,6 +532,42 @@
                 document.getElementById(`m${matId}-p2-score`).innerText = matScores[matId].p2;
             }
         }
+
+        // Real-time listener for index.html match data
+        function listenForLiveMat1Updates() {
+            const updateMat1UI = () => {
+                const rawData = localStorage.getItem('railway_mat1_data');
+                if (!rawData) return;
+                const data = JSON.parse(rawData);
+
+                document.getElementById('m1-p1-name').innerText = data.playerA;
+                document.getElementById('m1-p2-name').innerText = data.playerB;
+                document.getElementById('m1-p1-score').innerText = data.scoreA;
+                document.getElementById('m1-p2-score').innerText = data.scoreB;
+                matScores[1].p1 = data.scoreA;
+                matScores[1].p2 = data.scoreB;
+
+                document.getElementById('m1-qtr').innerText = data.quarter;
+                let mins = Math.floor(data.timeLeft / 60);
+                let secs = data.timeLeft % 60;
+                document.getElementById('m1-timer').innerText = 
+                    `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+                const statusBadge = document.getElementById('m1-status');
+                statusBadge.innerText = data.status;
+                statusBadge.className = data.status === 'LIVE' ? 'status-badge status-live' : 'status-badge status-pause';
+            };
+
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'railway_mat1_data') {
+                    updateMat1UI();
+                }
+            });
+
+            updateMat1UI();
+        }
+
+        listenForLiveMat1Updates();
     </script>
 </body>
 </html>
